@@ -1,0 +1,73 @@
+*{
+				margin:0;
+				padding:0;
+			}
+			body {
+				TEXT-ALIGN: center;
+				font-size:12px;
+				line-height:20px;
+				font-family:Arial, Helvetica, sans-serif;
+				background:url(../images/bg.jpg) no-repeat top center #f5fdff;
+				margin:0;
+			}
+			.shell{
+				width: 1024px;
+				margin: 0 auto;
+			}
+			.clear {
+				clear:both;
+			}
+			.header {
+				background: url(../images/header.png) no-repeat;
+				height: 89px;
+			}
+			.date,.menu,.user{float:left}
+			.nav{height:31px;line-height:31px;}
+			.date{width:200px;background:url(../images/date_bg.png) repeat-x;text-align:center;color:#fff;}
+			.menu ul {
+				width:600px;
+				list-style-type:none;
+				background:url(../images/menu_bg.png) repeat-x;
+				height:31px;
+			  line-height:31px;
+			}
+			.menu li {
+				float:left;
+				text-align:center;
+				color:#555555;
+				padding:0 10px;
+			}
+			.menu li a {
+				text-decoration:none;
+				color:#fff;
+			  font-size:bold;
+			}
+			.menu li:hover {
+				background:url(../images/menu_cur_bg.jpg) repeat-x;
+				color:#ffffff;
+			}
+			.user {
+				background:url(../images/menu_bg.png) repeat-x;
+				width: 223px;
+				text-align: center;
+			}
+			.left, .content {
+				float: left;
+			}
+			.submenu {
+				width: 200px;
+				background-color: #E6F1F8;
+				height: 600px;
+			}
+			.footer {
+				background: url(../images/footer.jpg) no-repeat;
+				height: 46px;
+				line-height: 46px;
+				font-size: 12px;
+				text-align: center;
+				color: white;
+			}
+			#mapDiv{
+				height:600px;
+				width:820px;
+			}

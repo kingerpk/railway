@@ -1,0 +1,110 @@
+﻿
+<html>
+    <head>
+		 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+        <title>铁路气象信息系统</title>
+		
+        <script src="js/jquery.js"></script>
+        <script src="js/OpenLayers-2.12/OpenLayers.js"></script>
+		 <script src="js/myopenayer.js"></script>
+		 <script src="data/MonitorHour.js"></script>
+		  <script src="js/OpenLayers-2.12/LoadingPanel.js"></script>
+		<!--面雨量模拟数据-->
+		<script src="data/rl.js"></script>
+		<script>
+			$(document).ready(
+				function(){
+					$("#hc").mouseenter(
+						function(){
+							$("#hc2").css("display","block");
+						}
+					);
+					$("#hc2").mouseleave(
+						function(){
+							$("#hc2").css("display","none");
+						}
+					);
+				}
+			);
+		</script>
+		<link rel="stylesheet" href="css/style.css">
+		<link rel="stylesheet" href="http://openlayers.org/dev/theme/default/style.css">
+	<style type="text/css" >
+			    .olControlLoadingPanel {
+            background-image:url(images/ajax-loader.gif);
+            margin-left: 40%;
+            margin-top: 30%;
+            position: relative;
+            width: 195px;
+            height: 195px;
+            background-position:center;
+            background-repeat:no-repeat;
+            display: none;
+        }
+				 
+		 #hc2{
+			width:95px;
+			height:100px;
+			position: absolute;
+			z-index: 999;
+			background: #0565CE;
+			display:none;
+		 }
+		 
+		 #hc2 li{
+			color:white;
+			cursor:pointer; 
+		 }
+	</style>
+    </head>
+    <body>
+		<div class="shell">
+			<div class="header"></div>
+			<div class="clear"></div>
+			<div class="nav">
+				<div class="date">2012年8月13日 星期一 15:42</div>
+				<div class="menu">
+					<ul>
+						<li><a onclick=showMianYuLiang() href="javascript:void(0)">面雨量</a></li>
+						<li><a onclick=showQuanshengYujing() href="javascript:void(0)">天气预警</a></li>
+						<li><a href="#">雨量预报</a></li>
+						<li id="hc">
+							<a href="#">缓冲查询</a>	
+								<br/>
+								<ul id="hc2">                 
+								  <li id="buff10">10公里缓冲区</li>
+								  <li id="buff20">20公里缓冲区</li>
+								  <li id="buffnone">关闭缓冲区</li>
+								</ul>
+						</li>
+						<li><a href="#">雨量统计</a></li>
+						<li><a href="#">中长期预报</a></li>
+						<li><a onclick=showleidatu() href="javascript:void(0)">雷达图</a></li>
+						<li><a href="#">系统管理</a></li>
+					</ul>
+				</div>
+				<div class="user"> 您好! 张三 | <a href="#">退出</a> </div>
+			</div>
+			<div class="clear"></div>
+			<div class="main">
+				<div class="left">
+					<div class="submenu">
+						
+					</div>
+				</div>
+				
+				<div class="content">
+					<div id="mapDiv"></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+			<div class="footer">
+				Copyright &copy; 2012 GZ. All Rights Reserved. 广州铁路局 版权所有
+			</div>
+			<div class="clear"></div>
+		</div>	
+	</body>
+	<script src="js/railway.js"></script>
+</html>

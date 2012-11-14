@@ -1,0 +1,24 @@
+#MyMapPanel{
+			list-style: none;
+			width: 150px;
+			height: 620px;
+			margin: 0px;
+			padding: 0px;
+			border-style: solid;
+			border-color: #6E8FC0;
+		}
+		#MyMapPanel li{
+			float: left;
+			text-align: center;
+			padding: 10px;
+		}
+
+		
+		#MyMapPanel li img{
+			height:50px;
+			width:50px;
+			float: left;
+		}
+		#MyMapPanel li span{
+			font-size: 12px;
+		}
