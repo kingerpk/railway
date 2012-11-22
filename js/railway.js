@@ -7,7 +7,8 @@
 			var remotehost="http://58.215.188.217:8080/geoserver";
 			var host=localhost;
 			var haspImgIndex=0;//图片计数器，用于图片的自动轮换
-
+			var haspInterval;//图片切换的定时器对象
+			
 			//地图的边界
 			var bounds = new OpenLayers.Bounds(
 				103.17303486509098, 17.207625610448765,
@@ -19,7 +20,7 @@
 							var options = {
 								projection: new OpenLayers.Projection("EPSG:4326"),
 								units: "degrees",
-								numZoomLevels: 10, 
+								numZoomLevels: 15, 
 								maxExtent:bounds
 							};
 							//初始化地图对象
@@ -35,6 +36,7 @@
 										minResolution: 0.0001346887990556335
 									}
 							);
+							 haspLayer.setVisibility(false);
 							railwayBuffer20=new OpenLayers.Layer.Vector("tem1");
 							//加载sld文件，为缓冲区设置风格
 										$.get(
@@ -97,9 +99,6 @@
 							var mouseP=new OpenLayers.Control.MousePosition();
 							mouseP.displayProjection=new OpenLayers.Projection(4326);
 							
-							//ajax加载图标
-							map.addControl( new OpenLayers.Control.LoadingPanel());
-							
 							//将上面初始化的一系列图层和control添加到map中去
 							map.addLayers([layer,railwayLayer,railwayBuffer20,haspLayer]);					
 							
@@ -115,20 +114,22 @@
 				});
 			
 			function showleidatu(){
-				 var giflayer=map.getLayersByName("nc");
-				 if(giflayer.length>0){
-					 for(var i in giflayer){
-						 //map.removeLayer(giflayer[i]);
-					 }
-					 //return;
+				var visibility=haspLayer.visibility;
+				 haspLayer.setVisibility(!visibility);
+				 if(visibility){
+					clearInterval(haspInterval);
 				 }
-				setInterval(
-					function(){
-						haspLayer.setUrl("20121109/img/09/"+haspImgIndex+".gif");
-						haspImgIndex++;
-						if(haspImgIndex>=24){
-							haspImgIndex=0;
+				 else(
+					haspInterval=setInterval(
+						function(){
+							haspLayer.setUrl("20121109/img/09/"+haspImgIndex+".gif");
+							haspImgIndex++;
+							if(haspImgIndex>=24){
+								haspImgIndex=0;
+							}
 						}
-					}
-				,1000)
+						,1000
+					)
+				 )
+				
 			}
