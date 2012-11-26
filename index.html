@@ -6,12 +6,10 @@
         <title>铁路气象信息系统</title>
 		
         <script src="js/jquery.js"></script>
-        <script src="js/OpenLayers-2.12/OpenLayers.js"></script>
+        <script src="js/OpenLayers-2.12/lib/OpenLayers.js"></script>
 		 <script src="js/myopenayer.js"></script>
-		 <script src="data/MonitorHour.js"></script>
 		  <script src="js/OpenLayers-2.12/LoadingPanel.js"></script>
-		<!--面雨量模拟数据-->
-		<script src="data/rl.js"></script>
+		  <script src="js/railway.js"></script>
 		<script>
 			$(document).ready(
 				function(){
@@ -25,6 +23,20 @@
 							$("#hc2").css("display","none");
 						}
 					);
+					$("#MyMapPanel li").mouseenter(
+						function(){
+							$(this).css("background","#BFDDAE"); 
+							$(this).css("curosr","pointer");
+						}
+					);
+					$("#MyMapPanel li").mouseleave(
+						function(){
+							$(this).css("background","#E6F1F8"); 
+							$(this).css("curosr","default");
+
+						}
+					);
+					
 				}
 			);
 		</script>
@@ -42,7 +54,48 @@
             background-repeat:no-repeat;
             display: none;
         }
-				 
+		
+		#MyMapPanel{
+			list-style: none;
+			width: 170px;
+			height: 620px;
+			margin: 0px;
+			padding: 0px;
+			
+		}
+		#MyMapPanel li{
+			float: left;
+			text-align: center;
+			padding: 3px;
+			width: 60px;
+			height: 80px;
+		}
+		
+		#rainTJ,#tj{
+			height: 600px;
+			width: 820px;
+		}
+		
+		#MyMapPanel li img{
+			height:50px;
+			width:50px;
+			float: left;
+		}
+		#MyMapPanel li span{
+			font-size: 12px;
+		}
+        
+		
+		
+		#legend{
+			width: 150px;
+			margin-top: 450px;
+			background-color: white;
+			border-color: black;
+			border-style: solid;
+			vertical-align: middle;
+		}
+		
 		 #hc2{
 			width:95px;
 			height:100px;
@@ -56,6 +109,25 @@
 			color:white;
 			cursor:pointer; 
 		 }
+		 
+		 #stationTJ table{
+			border-collapse: collapse;
+			margin: 5;
+			font-family: Georgia, "Bitstream Charter", serif;
+			font-size: 14px;
+		 }
+		 #stationTJ table td{
+			border-style: solid;
+			border-width: 1px;
+			border-color: #7FBBB1;
+			width: 50px;
+		 }
+		 #stationTJ table th{
+			border-width: 1px;
+			border-color: #7FBBB1;
+			border-style: solid;
+			font-size:11px;
+		}
 	</style>
     </head>
     <body>
@@ -66,9 +138,9 @@
 				<div class="date">2012年8月13日 星期一 15:42</div>
 				<div class="menu">
 					<ul>
-						<li><a onclick=showMianYuLiang() href="javascript:void(0)">面雨量</a></li>
+						<li><a onclick=showStation() href="javascript:void(0)">自动站数据</a></li>
 						<li><a onclick=showQuanshengYujing() href="javascript:void(0)">天气预警</a></li>
-						<li><a href="#">雨量预报</a></li>
+						
 						<li id="hc">
 							<a href="#">缓冲查询</a>	
 								<br/>
@@ -78,8 +150,8 @@
 								  <li id="buffnone">关闭缓冲区</li>
 								</ul>
 						</li>
-						<li><a href="#">雨量统计</a></li>
 						<li><a href="#">中长期预报</a></li>
+						
 						<li><a onclick=showleidatu() href="javascript:void(0)">雷达图</a></li>
 						<li><a href="#">系统管理</a></li>
 					</ul>
@@ -90,12 +162,69 @@
 			<div class="main">
 				<div class="left">
 					<div class="submenu">
-						
+						<ul id='MyMapPanel' ><li><image class='MyMapPanel_image' src='images/yujing/hanleng.jpg'/><br/><span  class='MyMapPanel_span'>寒冷</span></li><li><image class='MyMapPanel_image' src='images/yujing/senlinhuoxian.jpg'/><br/><span  class='MyMapPanel_span'>森林火险</span></li><li><image class='MyMapPanel_image' src='images/yujing/bingbao.jpg'/><br/><span  class='MyMapPanel_span'>冰雹</span></li><li><image class='MyMapPanel_image' src='images/yujing/baoyu.jpg'/><br/><span  class='MyMapPanel_span'>暴雨</span></li><li><image class='MyMapPanel_image' src='images/yujing/daolujiebing.jpg'/><br/><span  class='MyMapPanel_span'>道路结冰</span></li><li><image class='MyMapPanel_image' src='images/yujing/dawu.jpg'/><br/><span  class='MyMapPanel_span'>大雾</span></li><li><image class='MyMapPanel_image' src='images/yujing/gaowen.jpg'/><br/><span  class='MyMapPanel_span'>高温</span></li><li><image class='MyMapPanel_image' src='images/yujing/huimai.jpg'/><br/><span  class='MyMapPanel_span'>灰霾</span></li><li><image class='MyMapPanel_image' src='images/yujing/taifeng.jpg'/><br/><span  class='MyMapPanel_span'>台风</span></li><li><image class='MyMapPanel_image' src='images/yujing/dafeng.jpg'/><br/><span  class='MyMapPanel_span'>大风</span></li><li><image class='MyMapPanel_image' src='images/yujing/leibao.jpg'/><br/><span  class='MyMapPanel_span'>雷暴</span></li><li><image class='MyMapPanel_image' src='images/yujing/leidian.jpg'/><br/><span  class='MyMapPanel_span'>雷电</span></li><li><image class='MyMapPanel_image' src='images/yujing/ganhan.jpg'/><br/><span  class='MyMapPanel_span'>干旱</span></li><li><image class='MyMapPanel_image' src='images/yujing/leiyudafeng.jpg'/><br/><span  class='MyMapPanel_span'>雷雨大风</span></li></ul>
+						<div id="stationTJ" style="display:none">
+							<table>
+								<tr>
+									<th></th>
+									<th>注意警戒站点数</th>
+									<th>限速警戒站点数</th>
+								</tr>
+								<tr>
+									<td>韶关</td>
+									<td>0</td>
+									<td>0</td>
+								</tr>
+								<tr>
+									<td>英德</td>
+									<td>0</td>
+									<td>0</td>
+								</tr>
+								<tr>
+									<td>清远</td>
+									<td>1</td>
+									<td>0</td>
+								</tr>
+								<tr>
+									<td>广州</td>
+									<td>0</td>
+									<td>0</td>
+								</tr>
+								<tr>
+									<td>佛山</td>
+									<td>0</td>
+									<td>0</td>
+								</tr>
+								<tr>
+									<td>东莞</td>
+									<td>0</td>
+									<td>0</td>
+								</tr>
+								<tr>
+									<td>顺德</td>
+									<td>0</td>
+									<td>0</td>
+								</tr>
+								<tr>
+									<td>中山</td>
+									<td>0</td>
+									<td>0</td>
+								</tr>
+								<tr>
+									<td>深圳</td>
+									<td>0</td>
+									<td>0</td>
+								</tr>
+							</table>
+						</div>
 					</div>
 				</div>
 				
 				<div class="content">
 					<div id="mapDiv"></div>
+					<div id="rainTJ" style="display:none">
+						<textarea id="tj">统计信息</textarea>
+					</div>
 				</div>
 				<div class="clear"></div>
 			</div>
@@ -106,5 +235,5 @@
 			<div class="clear"></div>
 		</div>	
 	</body>
-	<script src="js/railway.js"></script>
+	
 </html>
