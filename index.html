@@ -6,8 +6,11 @@
         <title>铁路气象信息系统</title>
 		
         <script src="js/jquery.js"></script>
-        <script src="js/OpenLayers-2.12/lib/OpenLayers.js"></script>
+		<script src="js/Highcharts-2.3.5\js\highcharts.js"></script>
+        <script src="js/OpenLayers-2.12/OpenLayers.js"></script>
 		 <script src="js/myopenayer.js"></script>
+		 <script src="data/haspJson/dataDate.js"></script>
+		 
 		  <script src="js/OpenLayers-2.12/LoadingPanel.js"></script>
 		  <script src="js/railway.js"></script>
 		<script>
@@ -153,7 +156,8 @@
 						<li><a href="#">中长期预报</a></li>
 						
 						<li><a onclick=showleidatu() href="javascript:void(0)">雷达图</a></li>
-						<li><a href="#">系统管理</a></li>
+						<li><a onclick=activateTlyxSelecter() href="javascript:void(0)">查看地区降雨统计</a></li>
+						<li><a onclick=activateHaspSelecter() href="javascript:void(0)">查Hasp</a></li>
 					</ul>
 				</div>
 				<div class="user"> 您好! 张三 | <a href="#">退出</a> </div>

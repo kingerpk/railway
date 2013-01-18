@@ -3,7 +3,7 @@
 			var map;   //openlayer的map对象
 			var railwayLayer;//纯铁路图层
 			var railwayBuffer20; //铁路20公里缓冲区
-			var haspLayer;//hasp图层
+			var haspImageLayer;//hasp图层
 			var localhost="http://localhost:8080/geoserver";
 			var remotehost="http://58.215.188.217:8080/geoserver";
 			var host=remotehost;
@@ -17,13 +17,17 @@
 			var stationLable;//自动站标注
 			var popup;//信息气泡
 			var tlyxSelector;
+			var haspLayer;//hasp图层
+			var haspSelecter;//hasp selecter
 			var	stationSelector;
+			
 			
 			//地图的边界
 			var bounds = new OpenLayers.Bounds(
-				103.17303486509098, 17.207625610448765,
-				120.82696513490903, 30.58254318474525
+				109.3753351271,19.76077990234,
+				117.84957829116,26.182667300106
 			);
+					
 			var jbStyle= new OpenLayers.StyleMap({
 					"default":new OpenLayers.Style({
 					fillColor: "#ffcc66",
@@ -161,14 +165,17 @@
 							var options = {
 								projection: new OpenLayers.Projection("EPSG:4326"),
 								units: "degrees",
-								numZoomLevels: 15, 
+								//numZoomLevels: 15, 
 								maxExtent:bounds,
-								controls:[]
+								controls:[],
+								
+								resolutions:[0.008275628089904775,0.004137814044952387,0.0020689070224761937,0.0010344535112380968],
+								restrictedExtent:bounds
 							};
 							//初始化地图对象
 							map = new OpenLayers.Map("mapDiv",options);
 							//雷达图层
-							haspLayer=new OpenLayers.Layer.Image(
+							haspImageLayer=new OpenLayers.Layer.Image(
 									"nc",
 									"20121109/img/09/0.gif",
 									new OpenLayers.Bounds(104.0951,17.234114484031,120.78096004728,30.269942645969),
@@ -178,6 +185,21 @@
 										maxResolution: 0.06896066511648435,
 										minResolution: 0.0001346887990556335
 									}
+							);
+							
+							//hasp图层
+							haspLayer=new OpenLayers.Layer.Vector("hasp");
+							
+							$.ajax(
+								{
+									url:"data/hasp.txt",
+									dataType:"text",
+									success:function(d){
+										var format=new OpenLayers.Format.GML();
+										var temFeatures=format.read(d);
+										haspLayer.addFeatures(temFeatures);
+									}
+								}
 							);
 							
 							station_warning=new OpenLayers.Layer.Vector("warning", {
@@ -194,6 +216,17 @@
 							station_warning.addFeatures([warning1]);
 							//自动站加载
 							stationLayerWFS=new  OpenLayers.Layer.Vector("station");
+							$.ajax(
+								{
+									url:"data/montiorGeoJson.js",
+									dataType:"text",
+									success:function(d){
+										var format=new OpenLayers.Format.GeoJSON();
+										var temFeatures=format.read(d);
+										stationLayerWFS.addFeatures(temFeatures);
+									}
+								}
+							);
 							
 							stationLayerWFS.styleMap=warningStyle;
 							
@@ -209,7 +242,7 @@
 								);
 							jbLayer.styleMap=jbStyle;
 						    jbLayer.setVisibility(true);
-							haspLayer.setVisibility(false);
+							haspImageLayer.setVisibility(false);
 							railwayBuffer20=new OpenLayers.Layer.Vector("tem1");
 							//加载sld文件，为缓冲区设置风格
 										$.get(
@@ -287,7 +320,7 @@
 							mouseP.displayProjection=new OpenLayers.Projection(4326);
 							
 							//将上面初始化的一系列图层和control添加到map中去
-							map.addLayers([layer,jbLayer,station_warning,stationLable,railwayLayer,railwayBuffer20,stationLayerWFS,stationLayer,haspLayer]);	
+							map.addLayers([layer,jbLayer,station_warning,stationLable,railwayLayer,railwayBuffer20,stationLayerWFS,stationLayer,haspImageLayer,haspLayer]);	
 							
 							var panel = new OpenLayers.Control.Panel({
 							createControlMarkup: function() {
@@ -303,11 +336,66 @@
 										var myControl="<img id='hapsLength' style='margin-left: 730px; display:none' src='images/hapslegend.png'/>";
 										return $(myControl)[0];			
 									}
-							});
+							});						
 							hapsLegendpanel.addControls([new OpenLayers.Control.Button()]);
+							
+							//hasp选择器
+							haspSelecter=new OpenLayers.Control.SelectFeature(								
+									haspLayer,
+									{
+										clickout:true,
+										onSelect:function(e){
+											if(popup){												
+												map.removePopup(popup);
+											}
+											var id=e.data.Id;
+											dataDate=dataDate+"";
+											var year=dataDate.substr(0,4);
+											var month=dataDate.substr(4,2);
+											var day=dataDate.substr(6,2);
+											var hours=dataDate.substr(8,2);
+											var dates=[];
+											var date=new Date();
+											var charTitle=year+"年"+month+"月"+day+"日"+hours+"时及未来23小时降雨量"
+											date.setYear(year);
+											date.setMonth(month);
+											date.setDate(day);
+											date.setHours(hours);
+											for(var i=0;i<24;i++){
+												date.setHours(date.getHours()+1);
+												dates.push(date.getDate()+"日"+date.getHours()+"时");
+											}
+											popup=new OpenLayers.Popup.FramedCloud(
+												"",
+												new  OpenLayers.LonLat(e.geometry.getCentroid().x,e.geometry.getCentroid().y),
+												new OpenLayers.Size(100,100),
+												"<div id='haspChar' style='min-width: 480px; height: 400px; margin: 0 auto'></div>",
+												null,
+												true,
+												function(){
+													map.removePopup(popup);
+													tlyxSelector.unselectAll();
+												}
+											);
+											map.addPopup(popup);
+											$.ajax(
+												{
+													url:"data/haspJson/"+id+".js",
+													dataType:"json",
+													success:function(d){
+														createChar(d,dates,charTitle);
+													}
+												}
+											);
+											haspSelecter.deactivate();
+										}
+									}
+							);
+							
 							stationSelector=new OpenLayers.Control.SelectFeature(								
 									stationLayerWFS,
 									{
+										clickout:true,
 										onSelect:function(e){
 											if(popup){
 												
@@ -330,6 +418,7 @@
 							tlyxSelector=new OpenLayers.Control.SelectFeature(								
 									jbLayer,
 									{
+										clickout:true,
 										onSelect:function(e){
 											if(popup){
 												map.removePopup(popup);
@@ -338,12 +427,17 @@
 												"",
 												new  OpenLayers.LonLat(e.geometry.getCentroid().x,e.geometry.getCentroid().y),
 												new OpenLayers.Size(100,100),
-												"<img src='images/yltj.jpg'/>",
+												"<img style='width:400px;height:400px' src='images/yltj.jpg'/>",
 												null,
 												true,
-												null
+												function(){
+													map.removePopup(popup);
+													tlyxSelector.unselectAll();
+												}
 											);
 											map.addPopup(popup);
+											tlyxSelector.deactivate();
+											stationSelector.activate();
 										}
 									}
 							);
@@ -356,30 +450,26 @@
 								mouseP,
 								panel,
 								tlyxSelector,
+								haspSelecter,
 								stationSelector
 							]);
 							$("#legend").hide();
-							tlyxSelector.activate();
-							
+							haspSelecter.deactivate();
+							tlyxSelector.deactivate();
+							stationSelector.activate();
 							
 							mouseP.activate();
 							map.zoomToMaxExtent();
-							map.setCenter(new OpenLayers.LonLat(113.62678, 23.44851), 3);
-							map.events.register(
-								"zoomend",
-								"",
-								function(e){
-									updateaStation(e);
-								}
-							);
-							map.events.register(
-								"moveend",
-								"",
-								function(e){
-									updateaStation(e);
-								}
-							);
+							map.setCenter(new OpenLayers.LonLat(113.62678, 23.44851), 0);
+							
+							
 				});
+			
+			function activateHaspSelecter(){
+				tlyxSelector.deactivate();
+				stationSelector.deactivate();
+				haspSelecter.activate();
+			}
 			
 			function updateStationLayer(){
 				stationLayer.params['LAYERS']='rshp'+stationIndex;
@@ -390,7 +480,13 @@
 				}
 			}
 			
+			function activateTlyxSelecter(){
+				stationSelector.deactivate();
+				tlyxSelector.activate();
+			}
+			
 			//根据地图缩放控制wfs的显示
+			//废弃
 			function updateaStation(e){
 					if(e.object.zoom>=7){
 							stationLable.setVisibility(true);
@@ -447,8 +543,8 @@
 			}
 			
 			function showleidatu(){
-				var visibility=haspLayer.visibility;
-				 haspLayer.setVisibility(!visibility);
+				var visibility=haspImageLayer.visibility;
+				 haspImageLayer.setVisibility(!visibility);
 				 if(visibility){
 					clearInterval(haspInterval);
 					$("#hapsLength").hide();
@@ -457,7 +553,7 @@
 					$("#hapsLength").show();
 					haspInterval=setInterval(
 						function(){
-							haspLayer.setUrl(getHaspBaseUrl()+"/"+haspImgIndex+".gif");
+							haspImageLayer.setUrl(getHaspBaseUrl()+"/"+haspImgIndex+".gif");
 							haspImgIndex++;
 							if(haspImgIndex>=24){
 								haspImgIndex=0;
@@ -475,6 +571,9 @@
 				var day=d.getDate()+"";
 				var month=d.getMonth()+1;
 				var hours=d.getHours()-2;
+				if(month<10){
+					month="0"+month;
+				}
 				var date=year+month+day;
 				var url="http://58.215.188.217:8080/fileupload/receiveFile/img/"+date+"/"+hours;
 				return url;
@@ -490,6 +589,51 @@
 				else{
 					$("#MyMapPanel").show();
 					$("#hapsLength").hide();
+					$("#stationTJ").hide();
 				}
 				
+			}
+			
+			
+			function createChar(data,dates,charTitle){
+				 new Highcharts.Chart({
+					chart: {
+						renderTo: 'haspChar',
+						type: 'line'
+					},
+					title: {text: charTitle},
+					xAxis: {
+						categories: dates,
+						labels: {
+										rotation: -50,
+										style: {
+											fontSize: '10px',
+											fontFamily: 'Verdana, sans-serif'
+										}
+									}
+					},
+					yAxis: {
+						title: {
+							text: '降雨量'
+						}
+					},
+					tooltip: {
+						formatter: function() {
+								return this.x +': '+ this.y;
+						}
+					},
+					legend:{
+						enabled:false
+					},
+					plotOptions: {
+									line: {
+										dataLabels: {
+											enabled: true
+										}
+									}
+								},
+					series: [{
+						data: data
+					}]
+				});
 			}
