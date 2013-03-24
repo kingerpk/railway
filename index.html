@@ -12,18 +12,19 @@
 		 <script src="data/haspJson/dataDate.js"></script>
 		 
 		  <script src="js/OpenLayers-2.12/LoadingPanel.js"></script>
+		  <script src="js/OpenLayers-2.12/Grid.js"></script>
 		  <script src="js/railway.js"></script>
 		<script>
 			$(document).ready(
 				function(){
-					$("#hc").mouseenter(
+					$("#monitorUL,#hc").mouseenter(
 						function(){
-							$("#hc2").css("display","block");
+							$("ul.drop-down-ul",this).css("display","block");
 						}
 					);
-					$("#hc2").mouseleave(
+					$("#monitorUL,#hc").mouseleave(
 						function(){
-							$("#hc2").css("display","none");
+							$("ul.drop-down-ul",this).css("display","none");
 						}
 					);
 					$("#MyMapPanel li").mouseenter(
@@ -44,7 +45,7 @@
 			);
 		</script>
 		<link rel="stylesheet" href="css/style.css">
-		<link rel="stylesheet" href="http://openlayers.org/dev/theme/default/style.css">
+		<link rel="stylesheet" href="js/OpenLayers-2.12/theme/default/style.css">
 	<style type="text/css" >
 			    .olControlLoadingPanel {
             background-image:url(images/ajax-loader.gif);
@@ -99,16 +100,16 @@
 			vertical-align: middle;
 		}
 		
-		 #hc2{
+		 .drop-down-ul{
 			width:95px;
-			height:100px;
+			height: auto;
 			position: absolute;
 			z-index: 999;
 			background: #0565CE;
 			display:none;
 		 }
 		 
-		 #hc2 li{
+		 .drop-down-li{
 			color:white;
 			cursor:pointer; 
 		 }
@@ -141,18 +142,16 @@
 				<div class="date">2012年8月13日 星期一 15:42</div>
 				<div class="menu">
 					<ul>
-						<li><a onclick=showStation() href="javascript:void(0)">自动站数据</a></li>
-						<li><a onclick=showQuanshengYujing() href="javascript:void(0)">天气预警</a></li>
-						
-						<li id="hc">
-							<a href="#">缓冲查询</a>	
+						<li><a id="weatherWarn" href="javascript:void(0)">天气预警</a></li>
+						<li id="monitorUL">
+								<a onclick=showStation() href="javascript:void(0)">自动站数据</a>
 								<br/>
-								<ul id="hc2">                 
-								  <li id="buff10">10公里缓冲区</li>
-								  <li id="buff20">20公里缓冲区</li>
-								  <li id="buffnone">关闭缓冲区</li>
+								<ul  class="drop-down-ul" style="height:auto;width:45px;background: #0565CE;">                 
+								  <li id="ws_li" class="drop-down-li">风速</li>
+								  <li id="wd_li" class="drop-down-li">风向</li>
+								  <li id="t_li" class="drop-down-li">温度</li>
 								</ul>
-						</li>
+						</li>																		
 						<li><a href="#">中长期预报</a></li>
 						
 						<li><a onclick=showleidatu() href="javascript:void(0)">雷达图</a></li>
@@ -166,61 +165,38 @@
 			<div class="main">
 				<div class="left">
 					<div class="submenu">
-						<ul id='MyMapPanel' ><li><image class='MyMapPanel_image' src='images/yujing/hanleng.jpg'/><br/><span  class='MyMapPanel_span'>寒冷</span></li><li><image class='MyMapPanel_image' src='images/yujing/senlinhuoxian.jpg'/><br/><span  class='MyMapPanel_span'>森林火险</span></li><li><image class='MyMapPanel_image' src='images/yujing/bingbao.jpg'/><br/><span  class='MyMapPanel_span'>冰雹</span></li><li><image class='MyMapPanel_image' src='images/yujing/baoyu.jpg'/><br/><span  class='MyMapPanel_span'>暴雨</span></li><li><image class='MyMapPanel_image' src='images/yujing/daolujiebing.jpg'/><br/><span  class='MyMapPanel_span'>道路结冰</span></li><li><image class='MyMapPanel_image' src='images/yujing/dawu.jpg'/><br/><span  class='MyMapPanel_span'>大雾</span></li><li><image class='MyMapPanel_image' src='images/yujing/gaowen.jpg'/><br/><span  class='MyMapPanel_span'>高温</span></li><li><image class='MyMapPanel_image' src='images/yujing/huimai.jpg'/><br/><span  class='MyMapPanel_span'>灰霾</span></li><li><image class='MyMapPanel_image' src='images/yujing/taifeng.jpg'/><br/><span  class='MyMapPanel_span'>台风</span></li><li><image class='MyMapPanel_image' src='images/yujing/dafeng.jpg'/><br/><span  class='MyMapPanel_span'>大风</span></li><li><image class='MyMapPanel_image' src='images/yujing/leibao.jpg'/><br/><span  class='MyMapPanel_span'>雷暴</span></li><li><image class='MyMapPanel_image' src='images/yujing/leidian.jpg'/><br/><span  class='MyMapPanel_span'>雷电</span></li><li><image class='MyMapPanel_image' src='images/yujing/ganhan.jpg'/><br/><span  class='MyMapPanel_span'>干旱</span></li><li><image class='MyMapPanel_image' src='images/yujing/leiyudafeng.jpg'/><br/><span  class='MyMapPanel_span'>雷雨大风</span></li></ul>
-						<div id="stationTJ" style="display:none">
-							<table>
-								<tr>
-									<th></th>
-									<th>注意警戒站点数</th>
-									<th>限速警戒站点数</th>
-								</tr>
-								<tr>
-									<td>韶关</td>
-									<td>0</td>
-									<td>0</td>
-								</tr>
-								<tr>
-									<td>英德</td>
-									<td>0</td>
-									<td>0</td>
-								</tr>
-								<tr>
-									<td>清远</td>
-									<td>1</td>
-									<td>0</td>
-								</tr>
-								<tr>
-									<td>广州</td>
-									<td>0</td>
-									<td>0</td>
-								</tr>
-								<tr>
-									<td>佛山</td>
-									<td>0</td>
-									<td>0</td>
-								</tr>
-								<tr>
-									<td>东莞</td>
-									<td>0</td>
-									<td>0</td>
-								</tr>
-								<tr>
-									<td>顺德</td>
-									<td>0</td>
-									<td>0</td>
-								</tr>
-								<tr>
-									<td>中山</td>
-									<td>0</td>
-									<td>0</td>
-								</tr>
-								<tr>
-									<td>深圳</td>
-									<td>0</td>
-									<td>0</td>
-								</tr>
-							</table>
-						</div>
+						<ul style="display: none" id="MyMapPanel">
+					   <li id="weatherWarn_D" tag="D" style="background-color: rgb(230, 241, 248); background-position: initial initial; background-repeat: initial initial;">
+							<img class="MyMapPanel_image" src="images/yujing/hanleng.jpg" /><br /><span class="MyMapPanel_span">寒冷</span>
+						</li>
+					   <li id="weatherWarn_J" tag="J">
+							<img class="MyMapPanel_image" src="images/yujing/senlinhuoxian.jpg" /><br /><span class="MyMapPanel_span">森林火险</span>
+						</li>
+					   <li id="weatherWarn_I" tag="I" style="background-color: rgb(230, 241, 248); background-position: initial initial; background-repeat: initial initial;">
+							<img class="MyMapPanel_image" src="images/yujing/bingbao.jpg" /><br /><span class="MyMapPanel_span">冰雹</span>
+						</li>
+					   <li id="weatherWarn_B" tag="B" style="background-color: rgb(230, 241, 248); background-position: initial initial; background-repeat: initial initial;">
+							<img class="MyMapPanel_image" src="images/yujing/baoyu.jpg" /><br /><span class="MyMapPanel_span">暴雨</span>
+						</li>
+					   <li id="weatherWarn_H" tag="H" style="background-color: rgb(230, 241, 248); background-position: initial initial; background-repeat: initial initial;">
+							<img class="MyMapPanel_image" src="images/yujing/daolujiebing.jpg" /><br /><span class="MyMapPanel_span">道路结冰</span>
+						</li>
+					   <li id="weatherWarn_E" tag="E" style="background-color: rgb(191, 221, 174); background-position: initial initial; background-repeat: initial initial;">
+							<img class="MyMapPanel_image" src="images/yujing/dawu.jpg" /><br /><span class="MyMapPanel_span">大雾</span>
+						</li>
+					   <li id="weatherWarn_C" tag="C" style="background-color: rgb(230, 241, 248); background-position: initial initial; background-repeat: initial initial;">
+							<img class="MyMapPanel_image" src="images/yujing/gaowen.jpg" /><br /><span class="MyMapPanel_span">高温</span>
+						</li>
+					   <li id="weatherWarn_F" tag="F" style="background-color: rgb(230, 241, 248); background-position: initial initial; background-repeat: initial initial;">
+							<img class="MyMapPanel_image" src="images/yujing/huimai.jpg" /><br /><span class="MyMapPanel_span">灰霾</span>
+						</li>
+					   <li id="weatherWarn_A" tag="A" style="background-color: rgb(230, 241, 248); background-position: initial initial; background-repeat: initial initial;">
+							<img class="MyMapPanel_image" src="images/yujing/taifeng.jpg" /><br /><span class="MyMapPanel_span">台风</span>
+						</li>
+					   <li id="weatherWarn_G" tag="G">
+							<img class="MyMapPanel_image" src="images/yujing/leiyudafeng.jpg" /><br /><span class="MyMapPanel_span">雷雨大风</span>
+						</li>
+					  </ul> 					
 					</div>
 				</div>
 				
