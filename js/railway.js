@@ -1,4 +1,4 @@
-﻿	var LGis={
+	var LGis={
 	
 		Init:function()
 		{		
@@ -15,23 +15,10 @@
 			this.InitEvent();
 		},
 		InitEvent:function(){
-			var me=this;
-			$("#wd_li").bind("click",function(){
-					me.ShowMonitorLabel("wd");
-			});
-			$("#ws_li").bind("click",function(){
-					me.ShowMonitorLabel("ws");
-			});
-			$("#t_li").bind("click",function(){
-					me.ShowMonitorLabel("t");
-			});
-			$("#weatherWarn").bind("click",function(){
-				var visable=me.GetLayerVisible("weather_warn_layer");
-				
-				me.SetLayerVisibleAllForSingle("weather_warn_layer",!visable);
-				me.SetWeatherWarnVisible(!visable);						
-			});
+			var me=this;	
+			me.InitMonitorEvent();
 			me.BindWeathWarnPlanEven();
+			me.InitHapsDataPanelEvent();			
 		},
 		InitMap:function()
 		{
@@ -39,6 +26,7 @@
 			me.InitMapBase();
 			me.InitBaseLayer();
 			me.InitMonitorLayer();
+			me.InitHapsDataLayer();
 			me.InitWeatherWarnLayer();
 			me.SetLayerVisibleAllForSingle("monitor_layer",true);
 		},
@@ -80,18 +68,31 @@
 		},
 		ShowMonitorLabel:function(field){
 			var me=this;
+			me.SetLayerVisibleAllForSingle("monitor_layer",true);
+			me.ShowSubMenu("none");
 			var MonitorLayer=me.map.getLayersByName("monitor_layer")[0];
-			MonitorLayer.styleMap.styles.default.defaultStyle.label='${'+field+'}';
+			MonitorLayer.styleMap.styles["default"].defaultStyle.label='${'+field+'}';
 			MonitorLayer.redraw();
+			me.SetControlActivateAllForSingle("none");
 		},
-		SetWeatherWarnVisible:function(visable){
+		InitMonitorEvent:function(){
 			var me=this;
-			if(!visable){
-				$("#MyMapPanel").hide();
-			}
-			else{
-				$("#MyMapPanel").show();	
-			}
+			$("#wd_li").bind("click",function(){
+					$("#monitorUL a").text("风向");
+					me.ShowMonitorLabel("wd");
+			});
+			$("#ws_li").bind("click",function(){
+					$("#monitorUL a").text("风速");
+					me.ShowMonitorLabel("ws");
+			});
+			$("#t_li").bind("click",function(){
+					$("#monitorUL a").text("温度");
+					me.ShowMonitorLabel("t");
+			});
+		},
+		ShowSubMenu:function(menuId){
+			$("div.submenuItem").hide();
+			$("#"+menuId).show();
 		},
 		InitWeatherWarnLayer:function(){
 			var me=this;
@@ -102,6 +103,13 @@
 		},
 		BindWeathWarnPlanEven:function(){
 			var me=this;
+
+			$("#weatherWarn").bind("click",function(){				
+				me.SetLayerVisibleAllForSingle("weather_warn_layer",true);
+				me.ShowSubMenu("weatherWarnPanel");				
+				me.SetControlActivateAllForSingle("none");
+			});
+
 			$("#MyMapPanel li").bind("click",function(){
 				var sign=$(this).attr("tag");
 				
@@ -134,6 +142,61 @@
 					}
 				);
 			});
+		},
+		InitHapsSelecter:function(activate){
+			var me=this;
+			var hapsLayer=me.map.getLayersByName("haps_data_layer")[0];
+			var haspSelecter=new OpenLayers.Control.SelectFeature(								
+					hapsLayer,
+					{
+						clickout:true,
+						onSelect:function(e){
+							if(me.popup){												
+								me.map.removePopup(me.popup);
+							}
+							var value=e.data.r;
+							
+							me.popup=new OpenLayers.Popup.FramedCloud(
+								"",
+								new  OpenLayers.LonLat(e.geometry.getCentroid().x,e.geometry.getCentroid().y),
+								new OpenLayers.Size(100,100),
+								"雨量："+value,
+								null,
+								true,
+								function(){
+									me.map.removePopup(me.popup);
+									haspSelecter.unselectAll();
+								}
+							);	
+							me.map.addPopup(me.popup);
+						}
+					}
+			);
+			haspSelecter.ControlId="haps_selecter";
+			me.RegisterLonelyControl(haspSelecter,"haps_selecter",activate);
+		},
+		RegisterLonelyControl:function(Control,ControlId,activate){
+			var me=this;
+			Control.ControlId=ControlId;
+			me.map.addControl(Control);
+			if(!me.lonelyControls){
+				me.lonelyControls={};
+			}
+			me.lonelyControls[ControlId]=1;
+			if(activate){
+				me.SetControlActivateAllForSingle("haps_selecter");
+			}
+		},
+		SetControlActivateAllForSingle:function(ControlId){
+			var me=this;
+			if(me.lonelyControls){
+				for(var id in me.RegisterLonelyControl){
+					var control=me.map.getControlsBy("ControlId",id)[0];
+					control.deactivate();
+				}
+				var targetControl=me.map.getControlsBy("ControlId",ControlId)[0];
+				targetControl.activate();
+			}
 		},
 		GetLayerAjax:function(url,layerName){
 			var Layer=new OpenLayers.Layer.Vector(layerName);
@@ -179,6 +242,46 @@
 			else{
 				return layer[0].getVisibility();
 			}
+		},
+		InitHapsDataPanelEvent:function(){
+			var me=this;
+
+			$("#hapsdata_a").bind("click",function(){
+				me.ShowSubMenu("hapsDataPanel");
+				me.SetLayerVisibleAllForSingle("haps_data_layer",true);
+				me.SetControlActivateAllForSingle("haps_selecter");
+			});			
+			$("#hapsDataPanel li").mouseenter(function(){
+				$(this).addClass("hapsWarnTimeHover");
+			});
+
+			$("#hapsDataPanel li").mouseleave(function(){
+				$(this).removeClass("hapsWarnTimeHover");
+			});
+			$("#hapsDataPanel li").click(function(){
+				$("#hapsDataPanel li").removeClass("hapsWarnTimeSelect");
+				$(this).addClass("hapsWarnTimeSelect");
+				var tag=$(this).attr("tag");
+				var hapsLayer=me.map.getLayersByName("haps_data_layer")[0];
+				if(hapsLayer){
+					me.map.removeLayer(hapsLayer);
+				}				
+
+				var newHapsLayer=me.GetLayerAjax("data/HapsGeoJson"+tag+".js","haps_data_layer");
+				newHapsLayer.styleMap=me.HapsDataLayerStyle;
+				me.map.addLayers([newHapsLayer]);
+				var control=me.map.getControlsBy("ControlId","haps_selecter")[0];
+				me.map.removeControl(control);
+				me.InitHapsSelecter(true);
+			});
+			me.InitHapsSelecter(false);
+		},
+		InitHapsDataLayer:function(){
+			var me=this;
+			var HapsDataLayer=me.GetLayerAjax("data/HapsGeoJson0.js","haps_data_layer");			
+			HapsDataLayer.styleMap=me.HapsDataLayerStyle;
+			HapsDataLayer.setVisibility(false);
+			me.map.addLayers([HapsDataLayer]);
 		},
 		InitParameter:function(){
 
@@ -286,6 +389,38 @@
 						}					
 					)
 			});
+			this.HapsDataLayerStyle= new OpenLayers.StyleMap({
+							"default":new OpenLayers.Style({
+									fillColor: "#ffcc66",
+									strokeColor: "white",
+									fillOpacity: 0.7,
+									strokeOpacity:1
+								},
+								{
+									rules: [
+										new OpenLayers.Rule({
+											filter: new OpenLayers.Filter.Comparison({
+												type: OpenLayers.Filter.Comparison.GREATER_THAN_OR_EQUAL_TO,
+												property: "r", 
+												value: "30"
+											}),
+											symbolizer: {
+												fillColor: "red"									
+											}
+										}),
+										new OpenLayers.Rule({
+											elseFilter: true,
+											symbolizer: {
+												fillColor: "#ffcc66",
+												strokeColor: "white",
+												fillOpacity: 0.7,
+												strokeOpacity:1
+											}
+										})
+									]
+								}					
+							)
+					});
 
 		}
 	};

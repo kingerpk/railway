@@ -7,7 +7,7 @@
 		
         <script src="js/jquery.js"></script>
 		<script src="js/Highcharts-2.3.5\js\highcharts.js"></script>
-        <script src="js/OpenLayers-2.12/OpenLayers.js"></script>
+        <script src="js/OpenLayers-2.12/lib/OpenLayers.js"></script>
 		 <script src="js/myopenayer.js"></script>
 		 <script src="data/haspJson/dataDate.js"></script>
 		 
@@ -37,7 +37,6 @@
 						function(){
 							$(this).css("background","#E6F1F8"); 
 							$(this).css("curosr","default");
-
 						}
 					);
 					
@@ -64,9 +63,9 @@
 			width: 170px;
 			height: 620px;
 			margin: 0px;
-			padding: 0px;
-			
+			padding: 0px;			
 		}
+
 		#MyMapPanel li{
 			float: left;
 			text-align: center;
@@ -87,9 +86,7 @@
 		}
 		#MyMapPanel li span{
 			font-size: 12px;
-		}
-        
-		
+		}      
 		
 		#legend{
 			width: 150px;
@@ -132,6 +129,22 @@
 			border-style: solid;
 			font-size:11px;
 		}
+		li.hapsWarnTime{
+			border-style: solid;
+			border-width: 1px;
+			margin: 4px;
+			background-color: beige;
+			cursor: pointer;
+		}
+		li.hapsWarnTimeHover{
+			border-width: 2px;
+			border-color: blue;
+		}
+
+		li.hapsWarnTimeSelect{
+			border-width: 4px;
+			border-color: blue;
+		}
 	</style>
     </head>
     <body>
@@ -144,7 +157,7 @@
 					<ul>
 						<li><a id="weatherWarn" href="javascript:void(0)">天气预警</a></li>
 						<li id="monitorUL">
-								<a onclick=showStation() href="javascript:void(0)">自动站数据</a>
+								<a  href="javascript:void(0)">温度</a>
 								<br/>
 								<ul  class="drop-down-ul" style="height:auto;width:45px;background: #0565CE;">                 
 								  <li id="ws_li" class="drop-down-li">风速</li>
@@ -153,7 +166,7 @@
 								</ul>
 						</li>																		
 						<li><a href="#">中长期预报</a></li>
-						
+						<li><a href="javascript:void(0)" id="hapsdata_a">查看haps格点</a></li>
 						<li><a onclick=showleidatu() href="javascript:void(0)">雷达图</a></li>
 						<li><a onclick=activateTlyxSelecter() href="javascript:void(0)">查看地区降雨统计</a></li>
 						<li><a onclick=activateHaspSelecter() href="javascript:void(0)">查Hasp</a></li>
@@ -164,8 +177,26 @@
 			<div class="clear"></div>
 			<div class="main">
 				<div class="left">
+					
 					<div class="submenu">
-						<ul style="display: none" id="MyMapPanel">
+						<div class="submenuItem" style="display:none" id="hapsDataPanel">
+						<ul style="list-style: none;" >
+							<li  tag="0" class="hapsWarnTime">当前</li>
+							<li  tag="1" class="hapsWarnTime">1</li>
+							<li  tag="2" class="hapsWarnTime">2</li>
+							<li  tag="3" class="hapsWarnTime">3</li>
+							<li  tag="4" class="hapsWarnTime">4</li>
+							<li  tag="5" class="hapsWarnTime">5</li>
+							<li  tag="6" class="hapsWarnTime">6</li>
+							<li  tag="7" class="hapsWarnTime">7</li>
+							<li  tag="8" class="hapsWarnTime">8</li>
+							<li  tag="9" class="hapsWarnTime">9</li>
+							<li  tag="10" class="hapsWarnTime">10</li>
+							<li  tag="11" class="hapsWarnTime">11</li>
+						</ul>
+					</div>
+						<div class="submenuItem" style="display: none" id="weatherWarnPanel">
+						<ul  id="MyMapPanel">
 					   <li id="weatherWarn_D" tag="D" style="background-color: rgb(230, 241, 248); background-position: initial initial; background-repeat: initial initial;">
 							<img class="MyMapPanel_image" src="images/yujing/hanleng.jpg" /><br /><span class="MyMapPanel_span">寒冷</span>
 						</li>
@@ -196,7 +227,8 @@
 					   <li id="weatherWarn_G" tag="G">
 							<img class="MyMapPanel_image" src="images/yujing/leiyudafeng.jpg" /><br /><span class="MyMapPanel_span">雷雨大风</span>
 						</li>
-					  </ul> 					
+					  </ul> 	
+					  </div>				
 					</div>
 				</div>
 				
