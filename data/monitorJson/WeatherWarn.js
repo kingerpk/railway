@@ -1,0 +1,1 @@
+{"G":{"BFFO":"2","BFQY":"2","GDXH":"2","BFZN":"2","has":"yes","BCGZ":"2"},"P":{"BFSE":"3","has":"yes"},"S":{"BFZH":"3","has":"yes"},"B":{"BFSE":"3","BFFO":"3","BFQY":"3","GDXH":"3","BFJB":"3","BFZN":"3","BFZH":"3","has":"yes","BFSG":"3","BCGZ":"3"},"R":{"BFSE":"2","has":"yes"},"I":{"GDXH":"4","has":"yes"}}

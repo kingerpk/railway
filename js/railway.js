@@ -5,6 +5,10 @@
 			this.localhost="http://localhost:8080/geoserver";
 			this.remotehost="http://58.215.188.217:8080/geoserver";
 			this.host=this.remotehost;
+			this.rUrl="data/";
+			this.resourceUrl="http://58.215.188.217:8080/fileupload/receiveFile/";
+			//this.resourceUrl=this.rUrl;
+			this.haspInterval="";//haps图层切换器
 			this.map=null;
 			this.bounds = new OpenLayers.Bounds(
 				109.3753351271,19.76077990234,
@@ -16,19 +20,35 @@
 		},
 		InitEvent:function(){
 			var me=this;	
+			
+			me.InitTaiFengEvent();
 			me.InitMonitorEvent();
 			me.BindWeathWarnPlanEven();
-			me.InitHapsDataPanelEvent();			
+			me.InitHapsDataPanelEvent();		
+			me.InitHapsImageEvent();	
 		},
 		InitMap:function()
 		{
 			var me=this;
 			me.InitMapBase();
 			me.InitBaseLayer();
+
 			me.InitMonitorLayer();
 			me.InitHapsDataLayer();
 			me.InitWeatherWarnLayer();
+			me.InitHapsImageLayer();
+
 			me.SetLayerVisibleAllForSingle("monitor_layer",true);
+		},
+		ShowTaiFeng:function(showtaifeng){
+			if(showtaifeng){
+				$("#mapDiv").hide();
+				$("#taifeng_context").show();
+			}
+			else{
+				$("#mapDiv").show();
+				$("#taifeng_context").hide();
+			}
 		},
 		InitMapBase:function()
 		{
@@ -61,7 +81,7 @@
 		},
 		InitMonitorLayer:function(){
 			var me=this;
-			var MonitorLayer=me.GetLayerAjax("data/montiorGeoJson.js","monitor_layer");			
+			var MonitorLayer=me.GetLayerAjax(me.resourceUrl+"monitorJson/montiorGeoJson.js","monitor_layer");			
 			MonitorLayer.styleMap=me.MonitorLayerStyle;
 			MonitorLayer.setVisibility(false);
 			me.map.addLayers([MonitorLayer]);
@@ -75,19 +95,113 @@
 			MonitorLayer.redraw();
 			me.SetControlActivateAllForSingle("none");
 		},
+		InitHapsImageLayer:function(){
+			var me=this;
+			var haspImageLayer=new OpenLayers.Layer.Image(
+									"haps_image_layer",
+									me.GetHaspBaseUrl()+"/0.gif",
+									new OpenLayers.Bounds(104.0951,17.234114484031,120.78096004728,30.269942645969),
+									new OpenLayers.Size(1074,800),
+									{
+										isBaseLayer : false,
+										maxResolution: 0.06896066511648435,
+										minResolution: 0.0001346887990556335
+									}
+							);
+			haspImageLayer.setVisibility(false);
+			me.map.addLayers([haspImageLayer]);
+
+			var haspTitlePanel=new OpenLayers.Control.Panel({
+								createControlMarkup: function() {
+											var myControl="<h2 id='haspTitle' style='margin-top:20px;margin-left:60px'></h2>";
+											return $(myControl)[0];			
+										}
+							});
+							
+			haspTitlePanel.addControls([new OpenLayers.Control.Button()]);
+			me.RegisterLonelyControl(haspTitlePanel,"hasp_title_panel");
+		},
+		InitHapsImageEvent:function(){
+			var me=this;
+			$("#hapsImage_a").bind("click",function(){
+					me.ShowTaiFeng(false);
+					me.ShowSubMenu("none");
+					me.SetLayerVisibleAllForSingle("haps_image_layer",true);
+
+					var haspImgIndex=0;
+					var hapsImageLayer=me.map.getLayersByName("haps_image_layer")[0];
+					me.haspInterval=setInterval(
+						function(){
+							var d=new Date();
+							d.setHours(d.getHours()-1+haspImgIndex);
+							var Title=d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日"+d.getHours()+"时";
+							$("#haspTitle").text(Title);
+							hapsImageLayer.setUrl(me.GetHaspBaseUrl()+"/"+haspImgIndex+".gif");
+							haspImgIndex++;
+							if(haspImgIndex>=24){
+								haspImgIndex=0;
+							}
+						}
+						,1000
+					)
+				 }
+			)
+		},
+		GetHaspBaseUrl:function(){
+				var d=new Date();
+				var year=d.getFullYear()+"";
+				var day=d.getDate()+"";
+				var month=d.getMonth()+1;
+				var hours=d.getHours()-2;
+				if(month<10){
+					month="0"+month;
+				}
+				
+				if(day<10){
+					day="0"+day;
+				}
+				
+				if(hours<10){
+					hours="0"+hours;
+				}
+				
+				var date=year+month+day;
+				var url=this.resourceUrl+"/img/"+date+"/"+hours;
+				return url;
+			},
+		InitTaiFengEvent:function(){
+			var me=this;
+			$("#taifeng_a").bind("click",function(){
+				me.ShowTaiFeng(true);
+				me.ShowSubMenu("none");
+				me.SetControlActivateAllForSingle("none");
+			});
+		},
 		InitMonitorEvent:function(){
 			var me=this;
 			$("#wd_li").bind("click",function(){
+					me.ShowTaiFeng(false);
 					$("#monitorUL a").text("风向");
 					me.ShowMonitorLabel("wd");
+					me.SetControlActivateAllForSingle("none");
 			});
 			$("#ws_li").bind("click",function(){
+					me.ShowTaiFeng(false);
 					$("#monitorUL a").text("风速");
 					me.ShowMonitorLabel("ws");
+					me.SetControlActivateAllForSingle("none");
 			});
 			$("#t_li").bind("click",function(){
+					me.ShowTaiFeng(false);
 					$("#monitorUL a").text("温度");
 					me.ShowMonitorLabel("t");
+					me.SetControlActivateAllForSingle("none");
+			});
+			$("#r_li").bind("click",function(){
+					me.ShowTaiFeng(false);
+					$("#monitorUL a").text("雨量");
+					me.ShowMonitorLabel("r05m");
+					me.SetControlActivateAllForSingle("none");
 			});
 		},
 		ShowSubMenu:function(menuId){
@@ -104,18 +218,43 @@
 		BindWeathWarnPlanEven:function(){
 			var me=this;
 
-			$("#weatherWarn").bind("click",function(){				
+			$("#weatherWarn").bind("click",function(){			
+				me.ShowTaiFeng(false);	
 				me.SetLayerVisibleAllForSingle("weather_warn_layer",true);
 				me.ShowSubMenu("weatherWarnPanel");				
 				me.SetControlActivateAllForSingle("none");
+				me.ShowWeatherWarnWithSign("none");
 			});
 
-			$("#MyMapPanel li").bind("click",function(){
+			$("#MyMapPanel td").mouseenter(
+						function(){
+							$(this).removeClass("weatherWarnMouseOut");
+							$(this).addClass("weatherWarnMouseIn"); 
+						}
+					);
+			$("#MyMapPanel td").mouseleave(
+				function(){
+					$(this).removeClass("weatherWarnMouseIn");
+					$(this).addClass("weatherWarnMouseOut"); 
+				}
+			);
+
+			$("#MyMapPanel td").bind("click",function(){
 				var sign=$(this).attr("tag");
-				
-				$.ajax(
+				$("#MyMapPanel td").each(
+					function(){
+						$(this).removeClass("weatherWarnSelecter");
+					}
+				);
+				$(this).addClass("weatherWarnSelecter");
+				me.ShowWeatherWarnWithSign(sign);
+			});
+		},
+		ShowWeatherWarnWithSign:function(sign){
+			var me=this;
+			$.ajax(
 					{
-						url:"data/WeatherWarn.js",
+						url:me.resourceUrl+"monitorJson/WeatherWarn.js",
 						dataType:"json",
 						success:function(d){
 							var cityColor=d[sign];
@@ -126,6 +265,13 @@
 								feature.attributes.color=0;
 								feature.data.color=0;
 							}
+
+							for(var s in d){
+								if(d[s]["has"]=="yes"){
+									$("#weatherWarnPanel td[tag='"+s+"']").css("background-color","yellow");
+								}								
+							}
+
 							if(typeof(cityColor)!="undefined"||cityColor!=null){
 								for(var city in cityColor){
 										var features=layer.getFeaturesByAttribute("NAME",city);
@@ -141,7 +287,6 @@
 						}
 					}
 				);
-			});
 		},
 		InitHapsSelecter:function(activate){
 			var me=this;
@@ -195,7 +340,9 @@
 					control.deactivate();
 				}
 				var targetControl=me.map.getControlsBy("ControlId",ControlId)[0];
-				targetControl.activate();
+				if(targetControl){
+					targetControl.activate();	
+				}				
 			}
 		},
 		GetLayerAjax:function(url,layerName){
@@ -223,6 +370,9 @@
 				}
 				if(layer.name==layerName){
 					layer.setVisibility(visable);
+					if(layerName!="haps_image_layer"){
+						clearInterval(me.haspInterval);
+					}
 					continue;
 				}
 				layer.setVisibility(!visable);
@@ -247,6 +397,7 @@
 			var me=this;
 
 			$("#hapsdata_a").bind("click",function(){
+				me.ShowTaiFeng(false);
 				me.ShowSubMenu("hapsDataPanel");
 				me.SetLayerVisibleAllForSingle("haps_data_layer",true);
 				me.SetControlActivateAllForSingle("haps_selecter");
@@ -267,7 +418,7 @@
 					me.map.removeLayer(hapsLayer);
 				}				
 
-				var newHapsLayer=me.GetLayerAjax("data/HapsGeoJson"+tag+".js","haps_data_layer");
+				var newHapsLayer=me.GetLayerAjax(me.resourceUrl+"haspJson/HapsGeoJson"+tag+".js","haps_data_layer");
 				newHapsLayer.styleMap=me.HapsDataLayerStyle;
 				me.map.addLayers([newHapsLayer]);
 				var control=me.map.getControlsBy("ControlId","haps_selecter")[0];
@@ -278,7 +429,7 @@
 		},
 		InitHapsDataLayer:function(){
 			var me=this;
-			var HapsDataLayer=me.GetLayerAjax("data/HapsGeoJson0.js","haps_data_layer");			
+			var HapsDataLayer=me.GetLayerAjax(me.resourceUrl+"haspJson/HapsGeoJson0.js","haps_data_layer");			
 			HapsDataLayer.styleMap=me.HapsDataLayerStyle;
 			HapsDataLayer.setVisibility(false);
 			me.map.addLayers([HapsDataLayer]);
@@ -392,9 +543,10 @@
 			this.HapsDataLayerStyle= new OpenLayers.StyleMap({
 							"default":new OpenLayers.Style({
 									fillColor: "#ffcc66",
-									strokeColor: "white",
-									fillOpacity: 0.7,
-									strokeOpacity:1
+												strokeColor: "white",
+												strokeOpacity:1,
+												strokeWidth:1.5,
+												fillOpacity: 0.7
 								},
 								{
 									rules: [
@@ -413,8 +565,9 @@
 											symbolizer: {
 												fillColor: "#ffcc66",
 												strokeColor: "white",
-												fillOpacity: 0.7,
-												strokeOpacity:1
+												strokeOpacity:1,
+												strokeWidth:0.3,
+												fillOpacity: 0.7
 											}
 										})
 									]

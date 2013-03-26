@@ -7,7 +7,7 @@
 		
         <script src="js/jquery.js"></script>
 		<script src="js/Highcharts-2.3.5\js\highcharts.js"></script>
-        <script src="js/OpenLayers-2.12/lib/OpenLayers.js"></script>
+        <script src="js/OpenLayers-2.12/OpenLayers.js"></script>
 		 <script src="js/myopenayer.js"></script>
 		 <script src="data/haspJson/dataDate.js"></script>
 		 
@@ -27,18 +27,7 @@
 							$("ul.drop-down-ul",this).css("display","none");
 						}
 					);
-					$("#MyMapPanel li").mouseenter(
-						function(){
-							$(this).css("background","#BFDDAE"); 
-							$(this).css("curosr","pointer");
-						}
-					);
-					$("#MyMapPanel li").mouseleave(
-						function(){
-							$(this).css("background","#E6F1F8"); 
-							$(this).css("curosr","default");
-						}
-					);
+					
 					
 				}
 			);
@@ -46,56 +35,12 @@
 		<link rel="stylesheet" href="css/style.css">
 		<link rel="stylesheet" href="js/OpenLayers-2.12/theme/default/style.css">
 	<style type="text/css" >
-			    .olControlLoadingPanel {
-            background-image:url(images/ajax-loader.gif);
-            margin-left: 40%;
-            margin-top: 30%;
-            position: relative;
-            width: 195px;
-            height: 195px;
-            background-position:center;
-            background-repeat:no-repeat;
-            display: none;
-        }
-		
-		#MyMapPanel{
-			list-style: none;
-			width: 170px;
-			height: 620px;
-			margin: 0px;
-			padding: 0px;			
-		}
 
-		#MyMapPanel li{
-			float: left;
-			text-align: center;
-			padding: 3px;
-			width: 60px;
-			height: 80px;
-		}
-		
-		#rainTJ,#tj{
-			height: 600px;
-			width: 820px;
-		}
-		
-		#MyMapPanel li img{
-			height:50px;
-			width:50px;
-			float: left;
-		}
-		#MyMapPanel li span{
-			font-size: 12px;
-		}      
-		
-		#legend{
-			width: 150px;
-			margin-top: 450px;
-			background-color: white;
-			border-color: black;
-			border-style: solid;
-			vertical-align: middle;
-		}
+			#MyMapPanel td{
+				font-family: 微软雅黑;
+				font-size: 14px;
+				text-align: center;
+			}
 		
 		 .drop-down-ul{
 			width:95px;
@@ -110,25 +55,7 @@
 			color:white;
 			cursor:pointer; 
 		 }
-		 
-		 #stationTJ table{
-			border-collapse: collapse;
-			margin: 5;
-			font-family: Georgia, "Bitstream Charter", serif;
-			font-size: 14px;
-		 }
-		 #stationTJ table td{
-			border-style: solid;
-			border-width: 1px;
-			border-color: #7FBBB1;
-			width: 50px;
-		 }
-		 #stationTJ table th{
-			border-width: 1px;
-			border-color: #7FBBB1;
-			border-style: solid;
-			font-size:11px;
-		}
+
 		li.hapsWarnTime{
 			border-style: solid;
 			border-width: 1px;
@@ -145,6 +72,21 @@
 			border-width: 4px;
 			border-color: blue;
 		}
+
+		.weatherWarnMouseIn{
+			background:#BFDDAE;
+			cursor: pointer;
+		}
+
+		.weatherWarnMouseOut{
+			background:#E6F1F8;
+			curosr:default;
+		}
+
+		.weatherWarnSelecter{
+			border-style:solid;
+			border-color:blue;
+		}
 	</style>
     </head>
     <body>
@@ -157,19 +99,20 @@
 					<ul>
 						<li><a id="weatherWarn" href="javascript:void(0)">天气预警</a></li>
 						<li id="monitorUL">
-								<a  href="javascript:void(0)">温度</a>
+								<a  href="javascript:void(0)">雨量</a>
 								<br/>
 								<ul  class="drop-down-ul" style="height:auto;width:45px;background: #0565CE;">                 
 								  <li id="ws_li" class="drop-down-li">风速</li>
 								  <li id="wd_li" class="drop-down-li">风向</li>
 								  <li id="t_li" class="drop-down-li">温度</li>
+								  <li id="r_li" class="drop-down-li">雨量</li>
 								</ul>
 						</li>																		
 						<li><a href="#">中长期预报</a></li>
-						<li><a href="javascript:void(0)" id="hapsdata_a">查看haps格点</a></li>
-						<li><a onclick=showleidatu() href="javascript:void(0)">雷达图</a></li>
-						<li><a onclick=activateTlyxSelecter() href="javascript:void(0)">查看地区降雨统计</a></li>
-						<li><a onclick=activateHaspSelecter() href="javascript:void(0)">查Hasp</a></li>
+						<li><a href="javascript:void(0)" id="hapsdata_a">铁路雨量预测</a></li>
+						<li><a id="hapsImage_a" href="javascript:void(0)">雷达图</a></li>
+						<li><a  href="javascript:void(0)">查看地区降雨统计</a></li>
+						<li><a id="taifeng_a" href="javascript:void(0)">台风路径</a></li>
 					</ul>
 				</div>
 				<div class="user"> 您好! 张三 | <a href="#">退出</a> </div>
@@ -196,44 +139,57 @@
 						</ul>
 					</div>
 						<div class="submenuItem" style="display: none" id="weatherWarnPanel">
-						<ul  id="MyMapPanel">
-					   <li id="weatherWarn_D" tag="D" style="background-color: rgb(230, 241, 248); background-position: initial initial; background-repeat: initial initial;">
-							<img class="MyMapPanel_image" src="images/yujing/hanleng.jpg" /><br /><span class="MyMapPanel_span">寒冷</span>
-						</li>
-					   <li id="weatherWarn_J" tag="J">
-							<img class="MyMapPanel_image" src="images/yujing/senlinhuoxian.jpg" /><br /><span class="MyMapPanel_span">森林火险</span>
-						</li>
-					   <li id="weatherWarn_I" tag="I" style="background-color: rgb(230, 241, 248); background-position: initial initial; background-repeat: initial initial;">
-							<img class="MyMapPanel_image" src="images/yujing/bingbao.jpg" /><br /><span class="MyMapPanel_span">冰雹</span>
-						</li>
-					   <li id="weatherWarn_B" tag="B" style="background-color: rgb(230, 241, 248); background-position: initial initial; background-repeat: initial initial;">
-							<img class="MyMapPanel_image" src="images/yujing/baoyu.jpg" /><br /><span class="MyMapPanel_span">暴雨</span>
-						</li>
-					   <li id="weatherWarn_H" tag="H" style="background-color: rgb(230, 241, 248); background-position: initial initial; background-repeat: initial initial;">
+						<table  id="MyMapPanel" cellspacing=10>
+							<tr>
+						   <td id="weatherWarn_D" tag="D" >
+								<img class="MyMapPanel_image" src="images/yujing/hanleng.jpg" /><br /><span class="MyMapPanel_span">寒冷</span>
+							</td>
+						   <td id="weatherWarn_J" tag="J">
+								<img class="MyMapPanel_image" src="images/yujing/senlinhuoxian.jpg" /><br /><span class="MyMapPanel_span">森林火险</span>
+							</td>
+						</tr>
+						<tr>
+						   <td id="weatherWarn_I" tag="I" >
+								<img class="MyMapPanel_image" src="images/yujing/bingbao.jpg" /><br /><span class="MyMapPanel_span">冰雹</span>
+							</td>
+						   <td id="weatherWarn_B" tag="B" >
+								<img class="MyMapPanel_image" src="images/yujing/baoyu.jpg" /><br /><span class="MyMapPanel_span">暴雨</span>
+							</td>
+					</tr>
+					<tr>
+					   <td id="weatherWarn_H" tag="H">
 							<img class="MyMapPanel_image" src="images/yujing/daolujiebing.jpg" /><br /><span class="MyMapPanel_span">道路结冰</span>
-						</li>
-					   <li id="weatherWarn_E" tag="E" style="background-color: rgb(191, 221, 174); background-position: initial initial; background-repeat: initial initial;">
+						</td>
+					   <td id="weatherWarn_E" tag="E" >
 							<img class="MyMapPanel_image" src="images/yujing/dawu.jpg" /><br /><span class="MyMapPanel_span">大雾</span>
-						</li>
-					   <li id="weatherWarn_C" tag="C" style="background-color: rgb(230, 241, 248); background-position: initial initial; background-repeat: initial initial;">
+						</td>
+					</tr>
+					<tr>
+					   <td id="weatherWarn_C" tag="C" >
 							<img class="MyMapPanel_image" src="images/yujing/gaowen.jpg" /><br /><span class="MyMapPanel_span">高温</span>
-						</li>
-					   <li id="weatherWarn_F" tag="F" style="background-color: rgb(230, 241, 248); background-position: initial initial; background-repeat: initial initial;">
+						</td>
+					   <td id="weatherWarn_F" tag="F" >
 							<img class="MyMapPanel_image" src="images/yujing/huimai.jpg" /><br /><span class="MyMapPanel_span">灰霾</span>
-						</li>
-					   <li id="weatherWarn_A" tag="A" style="background-color: rgb(230, 241, 248); background-position: initial initial; background-repeat: initial initial;">
+						</td>
+					</tr>
+					<tr>
+					   <td id="weatherWarn_A" tag="A" >
 							<img class="MyMapPanel_image" src="images/yujing/taifeng.jpg" /><br /><span class="MyMapPanel_span">台风</span>
-						</li>
-					   <li id="weatherWarn_G" tag="G">
+						</td>
+					   <td id="weatherWarn_G" tag="G">
 							<img class="MyMapPanel_image" src="images/yujing/leiyudafeng.jpg" /><br /><span class="MyMapPanel_span">雷雨大风</span>
-						</li>
-					  </ul> 	
+						</td>
+					</tr>
+					  </table> 	
 					  </div>				
 					</div>
 				</div>
 				
 				<div class="content">
 					<div id="mapDiv"></div>
+					<div id="taifeng_context" style="display:none">
+						<div style="width:665px; height:572px;" id="flash"><embed type="application/x-shockwave-flash" src="http://www.szmb.gov.cn/data_cache/flash/typhoon/typhoon.swf?0.8007061637472361" width="665" height="572" id="fotester" name="fotester" bgcolor="#ffffff" quality="high" allowscriptaccess="always" allownetworking="all" salign="t" align="l" scale="noscale" allowfullscreen="true" flashvars="certainTyphoon=http://www.szmb.gov.cn/data_cache/typhoon/&amp;typhoonList=http://www.szmb.gov.cn/data_cache/typhoon/list.xml?0.6116463937796652&amp;typhoon=http://www.szmb.gov.cn/data_cache/typhoon/today.xml?0.40154340025037527"></div>
+					</div>
 					<div id="rainTJ" style="display:none">
 						<textarea id="tj">统计信息</textarea>
 					</div>
