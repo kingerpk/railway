@@ -40,16 +40,6 @@
 
 			me.SetLayerVisibleAllForSingle("monitor_layer",true);
 		},
-		ShowTaiFeng:function(showtaifeng){
-			if(showtaifeng){
-				$("#mapDiv").hide();
-				$("#taifeng_context").show();
-			}
-			else{
-				$("#mapDiv").show();
-				$("#taifeng_context").hide();
-			}
-		},
 		InitMapBase:function()
 		{
 			var me=this;
@@ -73,12 +63,32 @@
 			var layer = new OpenLayers.Layer.WMS(
 					"base_layer",
 					me.host+"/cite/wms?service=WMS",
-					 {layers: "railway1"},
+					 {layers: "basemap"},
 					 {singleTile:true}
 				);
 			me.map.addLayers([layer]);
 			me.map.setCenter(new OpenLayers.LonLat(113.62678, 23.44851), 0);
 		},
+/*>>>TaiFeng<<<*********************************************************************/
+		ShowTaiFeng:function(showtaifeng){
+			if(showtaifeng){
+				$("#mapDiv").hide();
+				$("#taifeng_context").show();
+			}
+			else{
+				$("#mapDiv").show();
+				$("#taifeng_context").hide();
+			}
+		},
+		InitTaiFengEvent:function(){
+			var me=this;
+			$("#taifeng_a").bind("click",function(){
+				me.ShowTaiFeng(true);
+				me.ShowSubMenu("none");
+				me.SetControlActivateAllForSingle("none");
+			});
+		},
+/*Montitor******************************************************************/
 		InitMonitorLayer:function(){
 			var me=this;
 			var MonitorLayer=me.GetLayerAjax(me.resourceUrl+"monitorJson/montiorGeoJson.js","monitor_layer");			
@@ -95,6 +105,34 @@
 			MonitorLayer.redraw();
 			me.SetControlActivateAllForSingle("none");
 		},
+		InitMonitorEvent:function(){
+			var me=this;
+			$("#wd_li").bind("click",function(){
+					me.ShowTaiFeng(false);
+					$("#monitorUL a").text("风向");
+					me.ShowMonitorLabel("wd");
+					me.SetControlActivateAllForSingle("none");
+			});
+			$("#ws_li").bind("click",function(){
+					me.ShowTaiFeng(false);
+					$("#monitorUL a").text("风速");
+					me.ShowMonitorLabel("ws");
+					me.SetControlActivateAllForSingle("none");
+			});
+			$("#t_li").bind("click",function(){
+					me.ShowTaiFeng(false);
+					$("#monitorUL a").text("温度");
+					me.ShowMonitorLabel("t");
+					me.SetControlActivateAllForSingle("none");
+			});
+			$("#r_li").bind("click",function(){
+					me.ShowTaiFeng(false);
+					$("#monitorUL a").text("雨量");
+					me.ShowMonitorLabel("r05m");
+					me.SetControlActivateAllForSingle("none");
+			});
+		},
+/*HapsImage*****************************************************************************/
 		InitHapsImageLayer:function(){
 			var me=this;
 			var haspImageLayer=new OpenLayers.Layer.Image(
@@ -127,7 +165,7 @@
 					me.ShowTaiFeng(false);
 					me.ShowSubMenu("none");
 					me.SetLayerVisibleAllForSingle("haps_image_layer",true);
-
+					clearInterval(me.haspInterval);
 					var haspImgIndex=0;
 					var hapsImageLayer=me.map.getLayersByName("haps_image_layer")[0];
 					me.haspInterval=setInterval(
@@ -169,45 +207,123 @@
 				var url=this.resourceUrl+"/img/"+date+"/"+hours;
 				return url;
 			},
-		InitTaiFengEvent:function(){
+/*HaspData**************************************************************************************/
+		InitHapsSelecter:function(activate){
 			var me=this;
-			$("#taifeng_a").bind("click",function(){
-				me.ShowTaiFeng(true);
-				me.ShowSubMenu("none");
-				me.SetControlActivateAllForSingle("none");
-			});
+			var hapsLayer=me.map.getLayersByName("haps_data_layer")[0];
+			var haspSelecter=new OpenLayers.Control.SelectFeature(								
+					hapsLayer,
+					{
+						clickout:true,
+						onSelect:function(e){
+							if(me.popup){												
+								me.map.removePopup(me.popup);
+							}
+							var value=e.data.r;
+							
+							me.popup=new OpenLayers.Popup.FramedCloud(
+								"",
+								new  OpenLayers.LonLat(e.geometry.getCentroid().x,e.geometry.getCentroid().y),
+								new OpenLayers.Size(100,100),
+								"雨量："+value,
+								null,
+								true,
+								function(){
+									me.map.removePopup(me.popup);
+									haspSelecter.unselectAll();
+								}
+							);	
+							me.map.addPopup(me.popup);
+						}
+					}
+			);
+			haspSelecter.ControlId="haps_selecter";
+			me.RegisterLonelyControl(haspSelecter,"haps_selecter",activate);
 		},
-		InitMonitorEvent:function(){
+		InitHapsDataPanelEvent:function(){
 			var me=this;
-			$("#wd_li").bind("click",function(){
-					me.ShowTaiFeng(false);
-					$("#monitorUL a").text("风向");
-					me.ShowMonitorLabel("wd");
-					me.SetControlActivateAllForSingle("none");
+
+			$("#hapsdata_a").bind("click",function(){
+				me.ShowTaiFeng(false);
+				me.ShowSubMenu("hapsDataPanel");
+				me.SetLayerVisibleAllForSingle("haps_data_layer",true);
+				me.SetControlActivateAllForSingle("haps_selecter");
+				me.InitHapsDataPanel();
+				$("#haspTitle").html("");
+			});			
+			$("#hapsDataPanel li").mouseenter(function(){
+				$(this).addClass("hapsWarnTimeHover");
 			});
-			$("#ws_li").bind("click",function(){
-					me.ShowTaiFeng(false);
-					$("#monitorUL a").text("风速");
-					me.ShowMonitorLabel("ws");
-					me.SetControlActivateAllForSingle("none");
+
+			$("#hapsDataPanel li").mouseleave(function(){
+				$(this).removeClass("hapsWarnTimeHover");
 			});
-			$("#t_li").bind("click",function(){
-					me.ShowTaiFeng(false);
-					$("#monitorUL a").text("温度");
-					me.ShowMonitorLabel("t");
-					me.SetControlActivateAllForSingle("none");
+			$("#hapsDataPanel li").click(function(){
+				$("#hapsDataPanel li").removeClass("hapsWarnTimeSelect");
+				$(this).addClass("hapsWarnTimeSelect");
+				var tag=$(this).attr("tag");
+				var hapsLayer=me.map.getLayersByName("haps_data_layer")[0];
+				if(hapsLayer){
+					me.map.removeLayer(hapsLayer);
+				}				
+
+				var newHapsLayer=me.GetLayerAjax(me.resourceUrl+"haspJson/HapsGeoJson"+tag+".js","haps_data_layer");
+				newHapsLayer.styleMap=me.HapsDataLayerStyle;
+				me.map.addLayers([newHapsLayer]);
+				var control=me.map.getControlsBy("ControlId","haps_selecter")[0];
+				me.map.removeControl(control);
+				me.InitHapsSelecter(true);
 			});
-			$("#r_li").bind("click",function(){
-					me.ShowTaiFeng(false);
-					$("#monitorUL a").text("雨量");
-					me.ShowMonitorLabel("r05m");
-					me.SetControlActivateAllForSingle("none");
-			});
+			me.InitHapsSelecter(false);
 		},
-		ShowSubMenu:function(menuId){
-			$("div.submenuItem").hide();
-			$("#"+menuId).show();
+		InitHapsDataPanel:function(){
+			var me=this;
+			$.ajax(
+					{
+						url:me.resourceUrl+"haspJson/hapsWarnTime.js",
+						dataType:"json",
+						success:function(d){
+							for(var timeIndex in d){
+								var valueRange=d[timeIndex];
+								var color="beige";
+								if(valueRange=="0.1-1"){
+									color="#00EBEB";
+								}
+								else if(valueRange=="1-5"){
+									color="#019FF5";
+								}
+								else if(valueRange=="5-10"){
+									color="#0000F6";
+								}
+								else if(valueRange=="10-15"){
+									color="#00FF00";
+								}
+								else if(valueRange=="15-20"){
+									color="#00C700";
+								}
+								else if(valueRange=="20-25"){
+									color="#009000";
+								}
+								else if(valueRange=="25-30"){
+									color="#FFFF00";
+								}
+								else if(valueRange=="30-"){
+									color="red";
+								}
+								$("#hapsDataPanel li[tag='"+timeIndex+"']").css("background-color",color);
+							}
+						}
+					}
+				);
 		},
+		InitHapsDataLayer:function(){
+			var me=this;
+			var HapsDataLayer=me.GetLayerAjax(me.resourceUrl+"haspJson/HapsGeoJson0.js","haps_data_layer");			
+			HapsDataLayer.styleMap=me.HapsDataLayerStyle;
+			HapsDataLayer.setVisibility(false);
+			me.map.addLayers([HapsDataLayer]);
+		},
+/*WeatherWarn************************************************************************************************/
 		InitWeatherWarnLayer:function(){
 			var me=this;
 			var WeatherWarnLayer=me.GetLayerAjax("data/weatherWarnGeoJson.js","weather_warn_layer");
@@ -288,38 +404,11 @@
 					}
 				);
 		},
-		InitHapsSelecter:function(activate){
-			var me=this;
-			var hapsLayer=me.map.getLayersByName("haps_data_layer")[0];
-			var haspSelecter=new OpenLayers.Control.SelectFeature(								
-					hapsLayer,
-					{
-						clickout:true,
-						onSelect:function(e){
-							if(me.popup){												
-								me.map.removePopup(me.popup);
-							}
-							var value=e.data.r;
-							
-							me.popup=new OpenLayers.Popup.FramedCloud(
-								"",
-								new  OpenLayers.LonLat(e.geometry.getCentroid().x,e.geometry.getCentroid().y),
-								new OpenLayers.Size(100,100),
-								"雨量："+value,
-								null,
-								true,
-								function(){
-									me.map.removePopup(me.popup);
-									haspSelecter.unselectAll();
-								}
-							);	
-							me.map.addPopup(me.popup);
-						}
-					}
-			);
-			haspSelecter.ControlId="haps_selecter";
-			me.RegisterLonelyControl(haspSelecter,"haps_selecter",activate);
-		},
+/*Common***********************************************************************************************************/
+		ShowSubMenu:function(menuId){
+			$("div.submenuItem").hide();
+			$("#"+menuId).show();
+		},		
 		RegisterLonelyControl:function(Control,ControlId,activate){
 			var me=this;
 			Control.ControlId=ControlId;
@@ -392,48 +481,7 @@
 			else{
 				return layer[0].getVisibility();
 			}
-		},
-		InitHapsDataPanelEvent:function(){
-			var me=this;
-
-			$("#hapsdata_a").bind("click",function(){
-				me.ShowTaiFeng(false);
-				me.ShowSubMenu("hapsDataPanel");
-				me.SetLayerVisibleAllForSingle("haps_data_layer",true);
-				me.SetControlActivateAllForSingle("haps_selecter");
-			});			
-			$("#hapsDataPanel li").mouseenter(function(){
-				$(this).addClass("hapsWarnTimeHover");
-			});
-
-			$("#hapsDataPanel li").mouseleave(function(){
-				$(this).removeClass("hapsWarnTimeHover");
-			});
-			$("#hapsDataPanel li").click(function(){
-				$("#hapsDataPanel li").removeClass("hapsWarnTimeSelect");
-				$(this).addClass("hapsWarnTimeSelect");
-				var tag=$(this).attr("tag");
-				var hapsLayer=me.map.getLayersByName("haps_data_layer")[0];
-				if(hapsLayer){
-					me.map.removeLayer(hapsLayer);
-				}				
-
-				var newHapsLayer=me.GetLayerAjax(me.resourceUrl+"haspJson/HapsGeoJson"+tag+".js","haps_data_layer");
-				newHapsLayer.styleMap=me.HapsDataLayerStyle;
-				me.map.addLayers([newHapsLayer]);
-				var control=me.map.getControlsBy("ControlId","haps_selecter")[0];
-				me.map.removeControl(control);
-				me.InitHapsSelecter(true);
-			});
-			me.InitHapsSelecter(false);
-		},
-		InitHapsDataLayer:function(){
-			var me=this;
-			var HapsDataLayer=me.GetLayerAjax(me.resourceUrl+"haspJson/HapsGeoJson0.js","haps_data_layer");			
-			HapsDataLayer.styleMap=me.HapsDataLayerStyle;
-			HapsDataLayer.setVisibility(false);
-			me.map.addLayers([HapsDataLayer]);
-		},
+		},		
 		InitParameter:function(){
 
 				this.MonitorLayerStyle= new OpenLayers.StyleMap({
@@ -552,7 +600,7 @@
 									rules: [
 										new OpenLayers.Rule({
 											filter: new OpenLayers.Filter.Comparison({
-												type: OpenLayers.Filter.Comparison.GREATER_THAN_OR_EQUAL_TO,
+												type: OpenLayers.Filter.Comparison.GREATER_THAN,
 												property: "r", 
 												value: "30"
 											}),
@@ -560,6 +608,83 @@
 												fillColor: "red"									
 											}
 										}),
+										new OpenLayers.Rule({
+											filter: new OpenLayers.Filter.Comparison({
+												type: OpenLayers.Filter.Comparison.BETWEEN,
+												property: "r", 
+												lowerBoundary:0.1,
+												upperBoundary:1
+											}),
+											symbolizer: {
+												fillColor: "#00EBEB"									
+											}
+										}),
+											new OpenLayers.Rule({
+											filter: new OpenLayers.Filter.Comparison({
+												type: OpenLayers.Filter.Comparison.BETWEEN,
+												property: "r", 
+												lowerBoundary:1,
+												upperBoundary:5
+											}),
+											symbolizer: {
+												fillColor: "#019FF5"									
+											}
+										}),
+											new OpenLayers.Rule({
+											filter: new OpenLayers.Filter.Comparison({
+												type: OpenLayers.Filter.Comparison.BETWEEN,
+												property: "r", 
+												lowerBoundary:5,
+												upperBoundary:10
+											}),
+											symbolizer: {
+												fillColor: "#0000F6"									
+											}
+										}),
+												new OpenLayers.Rule({
+											filter: new OpenLayers.Filter.Comparison({
+												type: OpenLayers.Filter.Comparison.BETWEEN,
+												property: "r", 
+												lowerBoundary:10,
+												upperBoundary:15
+											}),
+											symbolizer: {
+												fillColor: "#00FF00"									
+											}
+										}),
+												new OpenLayers.Rule({
+											filter: new OpenLayers.Filter.Comparison({
+												type: OpenLayers.Filter.Comparison.BETWEEN,
+												property: "r", 
+												lowerBoundary:15,
+												upperBoundary:20
+											}),
+											symbolizer: {
+												fillColor: "#00C700"									
+											}
+										}),
+												new OpenLayers.Rule({
+											filter: new OpenLayers.Filter.Comparison({
+												type: OpenLayers.Filter.Comparison.BETWEEN,
+												property: "r", 
+												lowerBoundary:20,
+												upperBoundary:25
+											}),
+											symbolizer: {
+												fillColor: "#009000"									
+											}
+										}),
+												new OpenLayers.Rule({
+											filter: new OpenLayers.Filter.Comparison({
+												type: OpenLayers.Filter.Comparison.BETWEEN,
+												property: "r", 
+												lowerBoundary:25,
+												upperBoundary:30
+											}),
+											symbolizer: {
+												fillColor: "#FFFF00"									
+											}
+										}),											
 										new OpenLayers.Rule({
 											elseFilter: true,
 											symbolizer: {
@@ -574,7 +699,6 @@
 								}					
 							)
 					});
-
 		}
 	};
 	
