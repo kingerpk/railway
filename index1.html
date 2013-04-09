@@ -2,10 +2,17 @@
     <head>
 		 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-        <title>铁路气象信息系统</title>		
+        <title>铁路气象信息系统</title>
+		
         <script src="js/jquery.js"></script>
+		<script src="js/Highcharts-2.3.5\js\highcharts.js"></script>
         <script src="js/OpenLayers-2.12/OpenLayers.js"></script>
-		  <script src="js/railway.js"></script>
+		 <script src="js/myopenayer.js"></script>
+		 <script src="http://58.215.188.217:8080/fileupload/receiveFile/haspJson/dataDate.js"></script>
+		 
+		  <script src="js/OpenLayers-2.12/LoadingPanel.js"></script>
+		  <script src="js/OpenLayers-2.12/Grid.js"></script>
+		  <script src="js/railway1.js"></script>
 		<script>
 			$(document).ready(
 				function(){
@@ -112,7 +119,7 @@
 				<div class="left">
 					
 					<div class="submenu">
-						<div class="submenuItem" style="display:none" id="hapsDataPanel">
+						<div class="submenuItem" id="hapsDataPanel">
 						<ul style="list-style: none;" >
 							<li  tag="0" class="hapsWarnTime">当前</li>
 							<li  tag="1" class="hapsWarnTime">1</li>
@@ -128,7 +135,7 @@
 							<li  tag="11" class="hapsWarnTime">11</li>
 						</ul>
 					</div>
-						
+										
 					</div>
 				</div>
 				
